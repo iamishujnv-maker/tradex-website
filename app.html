@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tradex — App</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:       #07080a;
+    --bg2:      #0d0f12;
+    --bg3:      #131518;
+    --border:   rgba(255,255,255,0.07);
+    --border2:  rgba(255,255,255,0.13);
+    --gold:     #d4a843;
+    --gold-dim: rgba(212,168,67,0.1);
+    --gold-mid: rgba(212,168,67,0.22);
+    --text:     #ede8df;
+    --muted:    #6b6d72;
+    --muted2:   #9a9da3;
+    --green:    #2ecc8a;
+    --green-dim:rgba(46,204,138,0.1);
+    --red:      #e05c5c;
+    --red-dim:  rgba(224,92,92,0.1);
+  }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Syne', sans-serif; font-size: 15px;
+    line-height: 1.6; -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* ── SCREENS ── */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; }
+
+  /* ── AUTH SCREEN ── */
+  #auth-screen {
+    align-items: center; justify-content: center;
+    background: var(--bg);
+    position: relative; overflow: hidden;
+  }
+  .auth-glow {
+    position: absolute; border-radius: 50%; pointer-events: none;
+    width: 500px; height: 350px;
+    background: rgba(212,168,67,0.05);
+    top: 20%; left: 50%; transform: translateX(-50%);
+    filter: blur(80px);
+  }
+  .auth-box {
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: 16px; padding: 40px 36px;
+    width: 100%; max-width: 420px;
+    position: relative; z-index: 1;
+  }
+  .auth-logo {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 20px; font-weight: 700; margin-bottom: 8px;
+  }
+  .auth-logo .mark {
+    width: 30px; height: 30px; border-radius: 7px;
+    background: var(--gold-dim); border: 1px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: var(--gold);
+  }
+  .auth-logo .x { color: var(--gold); }
+  .auth-tagline { font-size: 13px; color: var(--muted2); margin-bottom: 32px; }
+
+  .auth-tabs { display: flex; gap: 0; margin-bottom: 24px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+  .auth-tab {
+    flex: 1; padding: 10px; text-align: center;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    background: transparent; border: none; color: var(--muted2);
+    font-family: 'Syne', sans-serif; transition: all 0.2s;
+  }
+  .auth-tab.active { background: var(--bg3); color: var(--text); }
+
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 12px; color: var(--muted2); margin-bottom: 6px; font-weight: 500; letter-spacing: 0.03em; }
+  .form-input {
+    width: 100%; padding: 11px 14px;
+    background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: 8px; color: var(--text);
+    font-size: 14px; font-family: 'Syne', sans-serif;
+    outline: none; transition: border-color 0.2s;
+  }
+  .form-input:focus { border-color: var(--gold); }
+  .form-input::placeholder { color: var(--muted); }
+
+  .btn-auth {
+    width: 100%; padding: 13px;
+    background: var(--gold); border: none; border-radius: 8px;
+    color: #0a0800; font-size: 14px; font-weight: 700;
+    font-family: 'Syne', sans-serif; cursor: pointer;
+    transition: background 0.2s; margin-top: 8px;
+  }
+  .btn-auth:hover { background: #e0b84f; }
+  .btn-auth:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .auth-error {
+    background: var(--red-dim); border: 1px solid rgba(224,92,92,0.25);
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 13px; color: var(--red); margin-top: 12px; display: none;
+  }
+  .auth-success {
+    background: var(--green-dim); border: 1px solid rgba(46,204,138,0.25);
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 13px; color: var(--green); margin-top: 12px; display: none;
+  }
+
+  /* ── APP LAYOUT ── */
+  #app-screen { flex-direction: row; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px; min-height: 100vh; flex-shrink: 0;
+    background: var(--bg2); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; padding: 20px 0;
+    position: sticky; top: 0; height: 100vh;
+  }
+  .sidebar-logo {
+    display: flex; align-items: center; gap: 9px;
+    font-size: 17px; font-weight: 700; padding: 0 18px; margin-bottom: 28px;
+  }
+  .sidebar-logo .mark {
+    width: 26px; height: 26px; border-radius: 6px;
+    background: var(--gold-dim); border: 1px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: var(--gold);
+  }
+  .sidebar-logo .x { color: var(--gold); }
+
+  .nav-section { padding: 0 10px; margin-bottom: 4px; }
+  .nav-label { font-size: 10px; color: var(--muted); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 0 8px; margin-bottom: 4px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 7px; cursor: pointer;
+    font-size: 13px; font-weight: 500; color: var(--muted2);
+    transition: all 0.15s; margin-bottom: 2px; border: none;
+    background: transparent; font-family: 'Syne', sans-serif; width: 100%;
+    text-align: left;
+  }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: var(--gold-dim); color: var(--gold); }
+  .nav-item svg { width: 15px; height: 15px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  .sidebar-bottom { margin-top: auto; padding: 0 10px; }
+  .user-chip {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px; border-radius: 8px; background: var(--bg3);
+    border: 1px solid var(--border);
+  }
+  .user-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--gold-dim); border: 1px solid rgba(212,168,67,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: var(--gold); flex-shrink: 0;
+  }
+  .user-email { font-size: 11px; color: var(--muted2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .logout-btn {
+    background: none; border: none; cursor: pointer; color: var(--muted);
+    font-size: 16px; padding: 2px; transition: color 0.2s;
+  }
+  .logout-btn:hover { color: var(--red); }
+
+  /* ── MAIN CONTENT ── */
+  .main { flex: 1; overflow-y: auto; }
+  .page { display: none; padding: 32px 32px; }
+  .page.active { display: block; }
+
+  .page-header { margin-bottom: 28px; }
+  .page-title { font-family: 'Instrument Serif', serif; font-size: 28px; color: var(--text); letter-spacing: -0.5px; }
+  .page-sub { font-size: 13px; color: var(--muted2); margin-top: 4px; }
+
+  /* ── STAT CARDS ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px 16px;
+  }
+  .stat-label { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 8px; }
+  .stat-value { font-size: 26px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; line-height: 1; }
+  .stat-change { font-size: 12px; margin-top: 5px; }
+  .stat-change.up { color: var(--green); }
+  .stat-change.dn { color: var(--red); }
+  .stat-change.neutral { color: var(--muted2); }
+
+  /* ── TRADES TABLE ── */
+  .card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden; margin-bottom: 20px;
+  }
+  .card-header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .card-body { padding: 0; }
+
+  .trades-table { width: 100%; border-collapse: collapse; }
+  .trades-table th {
+    padding: 11px 16px; text-align: left; font-size: 11px;
+    color: var(--muted); font-weight: 600; letter-spacing: 0.05em;
+    text-transform: uppercase; border-bottom: 1px solid var(--border);
+    background: var(--bg3);
+  }
+  .trades-table td {
+    padding: 12px 16px; font-size: 13px; color: var(--muted2);
+    border-bottom: 1px solid var(--border);
+  }
+  .trades-table tr:last-child td { border-bottom: none; }
+  .trades-table tr:hover td { background: rgba(255,255,255,0.015); }
+
+  .sym { font-weight: 700; color: var(--text); }
+  .badge { font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 700; letter-spacing: 0.04em; }
+  .badge-long { background: var(--green-dim); color: var(--green); }
+  .badge-short { background: var(--red-dim); color: var(--red); }
+  .pnl-up { color: var(--green); font-weight: 600; }
+  .pnl-dn { color: var(--red); font-weight: 600; }
+
+  .empty-state {
+    padding: 48px 20px; text-align: center;
+  }
+  .empty-state p { font-size: 14px; color: var(--muted2); margin-bottom: 16px; }
+
+  /* ── ADD TRADE FORM ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+  .form-grid.full { grid-template-columns: 1fr; }
+
+  .form-select {
+    width: 100%; padding: 11px 14px;
+    background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: 8px; color: var(--text);
+    font-size: 14px; font-family: 'Syne', sans-serif;
+    outline: none; transition: border-color 0.2s;
+    appearance: none; cursor: pointer;
+  }
+  .form-select:focus { border-color: var(--gold); }
+  .form-select option { background: var(--bg3); }
+
+  .form-textarea {
+    width: 100%; padding: 11px 14px;
+    background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: 8px; color: var(--text);
+    font-size: 14px; font-family: 'Syne', sans-serif;
+    outline: none; transition: border-color 0.2s; resize: vertical;
+    min-height: 80px;
+  }
+  .form-textarea:focus { border-color: var(--gold); }
+  .form-textarea::placeholder { color: var(--muted); }
+
+  .form-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin-bottom: 20px; }
+  .form-section-title { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+
+  .pnl-preview {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 16px;
+  }
+  .pnl-preview .label { font-size: 12px; color: var(--muted2); }
+  .pnl-preview .amount { font-size: 22px; font-weight: 700; }
+
+  .btn-submit {
+    padding: 13px 32px; border-radius: 8px;
+    background: var(--gold); border: none;
+    color: #0a0800; font-size: 14px; font-weight: 700;
+    font-family: 'Syne', sans-serif; cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-submit:hover { background: #e0b84f; }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-secondary {
+    padding: 13px 24px; border-radius: 8px;
+    background: transparent; border: 1px solid var(--border2);
+    color: var(--muted2); font-size: 14px; font-weight: 600;
+    font-family: 'Syne', sans-serif; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { background: var(--bg3); color: var(--text); }
+
+  .form-actions { display: flex; gap: 12px; margin-top: 24px; }
+
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: 10px; padding: 14px 18px;
+    font-size: 13px; color: var(--text);
+    display: none; z-index: 999; min-width: 260px;
+    animation: slideUp 0.3s ease;
+  }
+  .toast.show { display: block; }
+  .toast.success { border-color: rgba(46,204,138,0.3); color: var(--green); }
+  .toast.error { border-color: rgba(224,92,92,0.3); color: var(--red); }
+  @keyframes slideUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+  /* emotion tags */
+  .emotion-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .emotion-tag {
+    padding: 6px 14px; border-radius: 20px;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--border2); color: var(--muted2);
+    background: transparent; font-family: 'Syne', sans-serif;
+    transition: all 0.15s;
+  }
+  .emotion-tag:hover { border-color: var(--gold); color: var(--gold); }
+  .emotion-tag.selected { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+
+  /* loading */
+  .spinner {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.1);
+    border-top-color: var(--gold);
+    animation: spin 0.7s linear infinite; display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .stats-grid { grid-template-columns: repeat(2,1fr); }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid.three { grid-template-columns: 1fr; }
+    .page { padding: 20px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── AUTH SCREEN ── -->
+<div id="auth-screen" class="screen active">
+  <div class="auth-glow"></div>
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="mark">▣</div>
+      Trade<span class="x">x</span>
+    </div>
+    <p class="auth-tagline">India's most advanced trading journal</p>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Log in</button>
+      <button class="auth-tab" onclick="switchTab('signup')">Sign up</button>
+    </div>
+
+    <div id="login-form">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="login-email" placeholder="you@example.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="login-password" placeholder="••••••••">
+      </div>
+      <button class="btn-auth" onclick="handleLogin()">Log in to Tradex</button>
+    </div>
+
+    <div id="signup-form" style="display:none;">
+      <div class="form-group">
+        <label class="form-label">Full name</label>
+        <input type="text" class="form-input" id="signup-name" placeholder="Rahul Sharma">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="signup-email" placeholder="you@example.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="signup-password" placeholder="Min 6 characters">
+      </div>
+      <button class="btn-auth" onclick="handleSignup()">Create free account</button>
+    </div>
+
+    <div class="auth-error" id="auth-error"></div>
+    <div class="auth-success" id="auth-success"></div>
+  </div>
+</div>
+
+<!-- ── APP SCREEN ── -->
+<div id="app-screen" class="screen">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="mark">▣</div>
+      Trade<span class="x">x</span>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Main</div>
+      <button class="nav-item active" onclick="showPage('dashboard')">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item" onclick="showPage('trades')">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        All trades
+      </button>
+      <button class="nav-item" onclick="showPage('add-trade')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Log a trade
+      </button>
+    </div>
+
+    <div class="nav-section" style="margin-top:8px;">
+      <div class="nav-label">Insights</div>
+      <button class="nav-item" onclick="showPage('analytics')">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Analytics
+      </button>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="user-chip">
+        <div class="user-avatar" id="user-avatar">T</div>
+        <div class="user-email" id="user-email-display">loading...</div>
+        <button class="logout-btn" onclick="handleLogout()" title="Log out">↪</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+
+    <!-- Dashboard -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div class="page-title">Dashboard</div>
+        <div class="page-sub" id="dash-greeting">Welcome back</div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Net P&L</div>
+          <div class="stat-value" id="stat-pnl">₹0</div>
+          <div class="stat-change neutral" id="stat-pnl-sub">No trades yet</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Win rate</div>
+          <div class="stat-value" id="stat-winrate">—</div>
+          <div class="stat-change neutral" id="stat-winrate-sub">No trades yet</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total trades</div>
+          <div class="stat-value" id="stat-total">0</div>
+          <div class="stat-change neutral">All time</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg P&L / trade</div>
+          <div class="stat-value" id="stat-avg">₹0</div>
+          <div class="stat-change neutral">Per trade</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Recent trades</div>
+          <button class="btn-secondary" style="padding:7px 16px;font-size:12px;" onclick="showPage('add-trade')">+ Log trade</button>
+        </div>
+        <div class="card-body" id="recent-trades-body">
+          <div class="empty-state">
+            <p>No trades yet. Log your first trade to get started.</p>
+            <button class="btn-submit" onclick="showPage('add-trade')">Log first trade →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- All Trades -->
+    <div class="page" id="page-trades">
+      <div class="page-header">
+        <div class="page-title">All trades</div>
+        <div class="page-sub">Your complete trading history</div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title" id="all-trades-count">0 trades</div>
+          <button class="btn-submit" style="padding:8px 18px;font-size:13px;" onclick="showPage('add-trade')">+ Log trade</button>
+        </div>
+        <div class="card-body" id="all-trades-body">
+          <div class="empty-state"><p>No trades logged yet.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Trade -->
+    <div class="page" id="page-add-trade">
+      <div class="page-header">
+        <div class="page-title">Log a trade</div>
+        <div class="page-sub">Record your trade details for analysis</div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-section-title">Trade details</div>
+        <div class="form-grid three">
+          <div class="form-group">
+            <label class="form-label">Symbol</label>
+            <input type="text" class="form-input" id="t-symbol" placeholder="NIFTY, BANKNIFTY, RELIANCE..." oninput="this.value=this.value.toUpperCase()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <select class="form-select" id="t-type">
+              <option value="LONG">Long (Buy)</option>
+              <option value="SHORT">Short (Sell)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date & time</label>
+            <input type="datetime-local" class="form-input" id="t-date">
+          </div>
+        </div>
+        <div class="form-grid three">
+          <div class="form-group">
+            <label class="form-label">Entry price (₹)</label>
+            <input type="number" class="form-input" id="t-entry" placeholder="0.00" oninput="calcPnl()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Exit price (₹)</label>
+            <input type="number" class="form-input" id="t-exit" placeholder="0.00" oninput="calcPnl()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Quantity / lots</label>
+            <input type="number" class="form-input" id="t-qty" placeholder="1" oninput="calcPnl()">
+          </div>
+        </div>
+
+        <div class="pnl-preview">
+          <div class="label">Calculated P&L</div>
+          <div class="amount" id="pnl-preview-val" style="color:var(--muted2)">₹0</div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-section-title">Context & psychology</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Strategy / setup</label>
+            <input type="text" class="form-input" id="t-strategy" placeholder="e.g. Breakout, Reversal, OI-based...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Market condition</label>
+            <select class="form-select" id="t-market">
+              <option value="">Select...</option>
+              <option>Trending up</option>
+              <option>Trending down</option>
+              <option>Ranging / sideways</option>
+              <option>High volatility</option>
+              <option>Low volatility</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Emotion during trade</label>
+          <div class="emotion-grid" id="emotion-grid">
+            <button class="emotion-tag" onclick="selectEmotion(this,'Calm')">😌 Calm</button>
+            <button class="emotion-tag" onclick="selectEmotion(this,'Confident')">💪 Confident</button>
+            <button class="emotion-tag" onclick="selectEmotion(this,'Fear')">😨 Fear</button>
+            <button class="emotion-tag" onclick="selectEmotion(this,'Greed')">🤑 Greed</button>
+            <button class="emotion-tag" onclick="selectEmotion(this,'FOMO')">😰 FOMO</button>
+            <button class="emotion-tag" onclick="selectEmotion(this,'Revenge')">😤 Revenge</button>
+            <button class="emotion-tag" onclick="selectEmotion(this,'Bored')">😐 Bored</button>
+            <button class="emotion-tag" onclick="selectEmotion(this,'Rushed')">⚡ Rushed</button>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:16px;">
+          <label class="form-label">Notes / trade rationale</label>
+          <textarea class="form-textarea" id="t-notes" placeholder="Why did you take this trade? What did you observe? What could you have done better?"></textarea>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-submit" onclick="submitTrade()">Save trade →</button>
+        <button class="btn-secondary" onclick="resetForm()">Clear form</button>
+      </div>
+    </div>
+
+    <!-- Analytics -->
+    <div class="page" id="page-analytics">
+      <div class="page-header">
+        <div class="page-title">Analytics</div>
+        <div class="page-sub">Performance breakdown across all your trades</div>
+      </div>
+
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat-card">
+          <div class="stat-label">Best trade</div>
+          <div class="stat-value pnl-up" id="an-best">₹0</div>
+          <div class="stat-change neutral" id="an-best-sym">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Worst trade</div>
+          <div class="stat-value pnl-dn" id="an-worst">₹0</div>
+          <div class="stat-change neutral" id="an-worst-sym">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Profit factor</div>
+          <div class="stat-value" id="an-pf">—</div>
+          <div class="stat-change neutral">Gross profit / loss</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">P&L by symbol</div></div>
+        <div class="card-body" id="an-symbol-body">
+          <div class="empty-state"><p>Log trades to see analytics.</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Emotion breakdown</div></div>
+        <div class="card-body" id="an-emotion-body">
+          <div class="empty-state"><p>Log trades with emotions to see patterns.</p></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://gkuyqzrhqlgcovhtnxeb.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdrdXlxenJocWxnY292aHRueGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxOTQ1NDEsImV4cCI6MjA4OTc3MDU0MX0.QuJtIVaLdEFfo4AdtFknmJa-NKfJwnxQgXv39EOa-h4';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentUser = null;
+let allTrades = [];
+let selectedEmotion = '';
+
+/* ── INIT ── */
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    enterApp();
+  }
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session) { currentUser = session.user; enterApp(); }
+    if (event === 'SIGNED_OUT') { currentUser = null; showAuthScreen(); }
+  });
+  setDefaultDate();
+}
+
+function setDefaultDate() {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  const el = document.getElementById('t-date');
+  if (el) el.value = now.toISOString().slice(0,16);
+}
+
+/* ── AUTH ── */
+function switchTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='signup')));
+  document.getElementById('login-form').style.display = tab==='login' ? 'block' : 'none';
+  document.getElementById('signup-form').style.display = tab==='signup' ? 'block' : 'none';
+  clearAuthMessages();
+}
+
+function clearAuthMessages() {
+  document.getElementById('auth-error').style.display = 'none';
+  document.getElementById('auth-success').style.display = 'none';
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg; el.style.display = 'block';
+  document.getElementById('auth-success').style.display = 'none';
+}
+
+function showAuthSuccess(msg) {
+  const el = document.getElementById('auth-success');
+  el.textContent = msg; el.style.display = 'block';
+  document.getElementById('auth-error').style.display = 'none';
+}
+
+async function handleLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!email || !password) return showAuthError('Please enter your email and password.');
+  const btn = document.querySelector('#login-form .btn-auth');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  btn.disabled = false; btn.textContent = 'Log in to Tradex';
+  if (error) showAuthError(error.message);
+}
+
+async function handleSignup() {
+  const name = document.getElementById('signup-name').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value;
+  if (!name || !email || !password) return showAuthError('Please fill in all fields.');
+  if (password.length < 6) return showAuthError('Password must be at least 6 characters.');
+  const btn = document.querySelector('#signup-form .btn-auth');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+  const { data, error } = await sb.auth.signUp({ email, password, options: { data: { full_name: name } } });
+  btn.disabled = false; btn.textContent = 'Create free account';
+  if (error) { showAuthError(error.message); return; }
+  if (data.user) {
+    await sb.from('profiles').upsert({ id: data.user.id, full_name: name, email });
+    showAuthSuccess('Account created! Check your email to confirm, or log in now.');
+  }
+}
+
+async function handleLogout() {
+  await sb.auth.signOut();
+}
+
+/* ── APP ── */
+function showAuthScreen() {
+  document.getElementById('auth-screen').classList.add('active');
+  document.getElementById('app-screen').classList.remove('active');
+}
+
+async function enterApp() {
+  document.getElementById('auth-screen').classList.remove('active');
+  document.getElementById('app-screen').classList.add('active');
+  const email = currentUser.email;
+  document.getElementById('user-email-display').textContent = email;
+  document.getElementById('user-avatar').textContent = email[0].toUpperCase();
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('dash-greeting').textContent = greeting + ', ' + (currentUser.user_metadata?.full_name || email.split('@')[0]);
+  await loadTrades();
+}
+
+/* ── NAVIGATION ── */
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick')?.includes(name)) n.classList.add('active');
+  });
+  if (name === 'analytics') renderAnalytics();
+}
+
+/* ── TRADES ── */
+async function loadTrades() {
+  const { data, error } = await sb.from('trades').select('*').eq('user_id', currentUser.id).order('traded_at', { ascending: false });
+  if (error) { showToast('Error loading trades', 'error'); return; }
+  allTrades = data || [];
+  renderDashboard();
+  renderAllTrades();
+}
+
+function renderDashboard() {
+  const total = allTrades.length;
+  const pnl = allTrades.reduce((s, t) => s + (t.pnl || 0), 0);
+  const wins = allTrades.filter(t => (t.pnl || 0) > 0).length;
+  const winRate = total > 0 ? Math.round((wins / total) * 100) : null;
+  const avg = total > 0 ? Math.round(pnl / total) : 0;
+
+  document.getElementById('stat-pnl').textContent = '₹' + Math.abs(Math.round(pnl)).toLocaleString('en-IN');
+  document.getElementById('stat-pnl').className = 'stat-value ' + (pnl >= 0 ? 'pnl-up' : 'pnl-dn');
+  document.getElementById('stat-pnl-sub').textContent = pnl >= 0 ? 'Profitable' : 'In loss';
+  document.getElementById('stat-pnl-sub').className = 'stat-change ' + (pnl >= 0 ? 'up' : 'dn');
+
+  document.getElementById('stat-winrate').textContent = winRate !== null ? winRate + '%' : '—';
+  document.getElementById('stat-winrate-sub').textContent = winRate !== null ? (wins + ' wins of ' + total) : 'No trades';
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-avg').textContent = '₹' + Math.abs(avg).toLocaleString('en-IN');
+  document.getElementById('stat-avg').className = 'stat-value ' + (avg >= 0 ? 'pnl-up' : 'pnl-dn');
+
+  const body = document.getElementById('recent-trades-body');
+  const recent = allTrades.slice(0, 8);
+  if (recent.length === 0) {
+    body.innerHTML = `<div class="empty-state"><p>No trades yet. Log your first trade to get started.</p><button class="btn-submit" onclick="showPage('add-trade')">Log first trade →</button></div>`;
+  } else {
+    body.innerHTML = tradesTableHTML(recent);
+  }
+}
+
+function renderAllTrades() {
+  document.getElementById('all-trades-count').textContent = allTrades.length + ' trades';
+  const body = document.getElementById('all-trades-body');
+  if (allTrades.length === 0) {
+    body.innerHTML = '<div class="empty-state"><p>No trades logged yet.</p></div>';
+  } else {
+    body.innerHTML = tradesTableHTML(allTrades);
+  }
+}
+
+function tradesTableHTML(trades) {
+  return `<table class="trades-table">
+    <thead><tr>
+      <th>Symbol</th><th>Type</th><th>Entry</th><th>Exit</th><th>Qty</th><th>P&L</th><th>Emotion</th><th>Date</th>
+    </tr></thead>
+    <tbody>${trades.map(t => `
+      <tr>
+        <td><span class="sym">${t.symbol || '—'}</span></td>
+        <td><span class="badge ${t.trade_type==='LONG'?'badge-long':'badge-short'}">${t.trade_type||'—'}</span></td>
+        <td>₹${(t.entry_price||0).toLocaleString('en-IN')}</td>
+        <td>₹${(t.exit_price||0).toLocaleString('en-IN')}</td>
+        <td>${t.quantity||'—'}</td>
+        <td class="${(t.pnl||0)>=0?'pnl-up':'pnl-dn'}">${(t.pnl||0)>=0?'+':''}₹${Math.abs(Math.round(t.pnl||0)).toLocaleString('en-IN')}</td>
+        <td>${t.emotion||'—'}</td>
+        <td>${t.traded_at ? new Date(t.traded_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short'}) : '—'}</td>
+      </tr>`).join('')}
+    </tbody></table>`;
+}
+
+/* ── ADD TRADE ── */
+function calcPnl() {
+  const entry = parseFloat(document.getElementById('t-entry').value) || 0;
+  const exit  = parseFloat(document.getElementById('t-exit').value) || 0;
+  const qty   = parseFloat(document.getElementById('t-qty').value) || 0;
+  const type  = document.getElementById('t-type').value;
+  let pnl = type === 'LONG' ? (exit - entry) * qty : (entry - exit) * qty;
+  const el = document.getElementById('pnl-preview-val');
+  el.textContent = (pnl >= 0 ? '+' : '') + '₹' + Math.round(pnl).toLocaleString('en-IN');
+  el.style.color = pnl > 0 ? 'var(--green)' : pnl < 0 ? 'var(--red)' : 'var(--muted2)';
+}
+
+function selectEmotion(btn, emotion) {
+  document.querySelectorAll('.emotion-tag').forEach(t => t.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedEmotion = emotion;
+}
+
+async function submitTrade() {
+  const symbol   = document.getElementById('t-symbol').value.trim();
+  const type     = document.getElementById('t-type').value;
+  const entry    = parseFloat(document.getElementById('t-entry').value);
+  const exit     = parseFloat(document.getElementById('t-exit').value);
+  const qty      = parseFloat(document.getElementById('t-qty').value);
+  const strategy = document.getElementById('t-strategy').value.trim();
+  const market   = document.getElementById('t-market').value;
+  const notes    = document.getElementById('t-notes').value.trim();
+  const dateVal  = document.getElementById('t-date').value;
+
+  if (!symbol) { showToast('Please enter a symbol', 'error'); return; }
+  if (!entry || !exit || !qty) { showToast('Please enter entry price, exit price, and quantity', 'error'); return; }
+
+  const pnl = type === 'LONG' ? (exit - entry) * qty : (entry - exit) * qty;
+
+  const btn = document.querySelector('#page-add-trade .btn-submit');
+  btn.disabled = true; btn.textContent = 'Saving...';
+
+  const { error } = await sb.from('trades').insert({
+    user_id: currentUser.id, symbol, trade_type: type,
+    entry_price: entry, exit_price: exit, quantity: qty, pnl,
+    strategy, notes, emotion: selectedEmotion,
+    traded_at: dateVal ? new Date(dateVal).toISOString() : new Date().toISOString()
+  });
+
+  btn.disabled = false; btn.textContent = 'Save trade →';
+
+  if (error) { showToast('Error saving trade: ' + error.message, 'error'); return; }
+
+  showToast('Trade saved successfully!', 'success');
+  resetForm();
+  await loadTrades();
+  setTimeout(() => showPage('dashboard'), 1200);
+}
+
+function resetForm() {
+  ['t-symbol','t-entry','t-exit','t-qty','t-strategy','t-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('t-type').value = 'LONG';
+  document.getElementById('t-market').value = '';
+  document.querySelectorAll('.emotion-tag').forEach(t => t.classList.remove('selected'));
+  selectedEmotion = '';
+  document.getElementById('pnl-preview-val').textContent = '₹0';
+  document.getElementById('pnl-preview-val').style.color = 'var(--muted2)';
+  setDefaultDate();
+}
+
+/* ── ANALYTICS ── */
+function renderAnalytics() {
+  if (allTrades.length === 0) return;
+  const sorted = [...allTrades].sort((a,b) => (b.pnl||0) - (a.pnl||0));
+  const best = sorted[0], worst = sorted[sorted.length-1];
+
+  document.getElementById('an-best').textContent = '+₹' + Math.round(best.pnl||0).toLocaleString('en-IN');
+  document.getElementById('an-best-sym').textContent = best.symbol || '—';
+  document.getElementById('an-worst').textContent = '₹' + Math.round(worst.pnl||0).toLocaleString('en-IN');
+  document.getElementById('an-worst-sym').textContent = worst.symbol || '—';
+
+  const grossProfit = allTrades.filter(t=>(t.pnl||0)>0).reduce((s,t)=>s+(t.pnl||0),0);
+  const grossLoss   = Math.abs(allTrades.filter(t=>(t.pnl||0)<0).reduce((s,t)=>s+(t.pnl||0),0));
+  const pf = grossLoss > 0 ? (grossProfit / grossLoss).toFixed(2) : '∞';
+  document.getElementById('an-pf').textContent = pf;
+
+  // By symbol
+  const symMap = {};
+  allTrades.forEach(t => {
+    if (!symMap[t.symbol]) symMap[t.symbol] = { pnl: 0, count: 0 };
+    symMap[t.symbol].pnl += (t.pnl || 0);
+    symMap[t.symbol].count++;
+  });
+  const syms = Object.entries(symMap).sort((a,b)=>b[1].pnl-a[1].pnl);
+  const maxAbs = Math.max(...syms.map(s=>Math.abs(s[1].pnl)));
+
+  document.getElementById('an-symbol-body').innerHTML = `<div style="padding:20px;">` +
+    syms.map(([sym, d]) => {
+      const pct = maxAbs > 0 ? Math.round((Math.abs(d.pnl)/maxAbs)*100) : 0;
+      const pos = d.pnl >= 0;
+      return `<div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px;">
+          <span style="font-weight:600;color:var(--text)">${sym}</span>
+          <span class="${pos?'pnl-up':'pnl-dn'}">${pos?'+':''}₹${Math.round(d.pnl).toLocaleString('en-IN')} <span style="color:var(--muted);font-weight:400">(${d.count} trades)</span></span>
+        </div>
+        <div style="height:6px;background:var(--bg3);border-radius:3px;">
+          <div style="height:6px;width:${pct}%;background:${pos?'var(--green)':'var(--red)'};border-radius:3px;"></div>
+        </div>
+      </div>`;
+    }).join('') + `</div>`;
+
+  // Emotions
+  const emoMap = {};
+  allTrades.filter(t=>t.emotion).forEach(t => {
+    if (!emoMap[t.emotion]) emoMap[t.emotion] = { pnl: 0, count: 0 };
+    emoMap[t.emotion].pnl += (t.pnl||0);
+    emoMap[t.emotion].count++;
+  });
+  const emos = Object.entries(emoMap).sort((a,b)=>b[1].count-a[1].count);
+  if (emos.length === 0) {
+    document.getElementById('an-emotion-body').innerHTML = '<div class="empty-state"><p>No emotion data yet.</p></div>';
+  } else {
+    document.getElementById('an-emotion-body').innerHTML = `<div style="padding:20px;display:flex;flex-wrap:wrap;gap:10px;">` +
+      emos.map(([emo, d]) => {
+        const pos = d.pnl >= 0;
+        return `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 16px;min-width:130px;">
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">${emo}</div>
+          <div style="font-size:12px;color:var(--muted2)">${d.count} trades</div>
+          <div style="font-size:12px;margin-top:2px;" class="${pos?'pnl-up':'pnl-dn'}">${pos?'+':''}₹${Math.round(d.pnl).toLocaleString('en-IN')}</div>
+        </div>`;
+      }).join('') + '</div>';
+  }
+}
+
+/* ── TOAST ── */
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+init();
+</script>
+</body>
+</html>
