@@ -6,6 +6,7 @@
 <title>Tradex — App</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -361,6 +362,89 @@
   .sheet-email strong { display: block; font-size: 15px; color: var(--text); margin-bottom: 2px; }
   .sheet-btn { width: 100%; padding: 14px; border-radius: 10px; border: 1px solid rgba(224,92,92,0.3); background: var(--red-dim); color: var(--red); font-size: 14px; font-weight: 600; font-family: 'Syne', sans-serif; cursor: pointer; }
 
+
+  .eq-filter {
+    padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
+    border: 1px solid var(--border2); background: transparent; color: var(--muted2);
+    cursor: pointer; font-family: 'Syne', sans-serif; transition: all 0.15s;
+  }
+  .eq-filter:hover { color: var(--text); background: var(--bg3); }
+  .eq-filter.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+
+  /* ── EDIT MODAL ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7); z-index: 400;
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: 16px; width: 100%; max-width: 580px;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 22px; border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; background: var(--bg2); z-index: 1;
+  }
+  .modal-title { font-size: 15px; font-weight: 600; color: var(--text); }
+  .modal-close {
+    width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border2);
+    background: none; color: var(--muted2); font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-family: sans-serif; transition: all 0.15s;
+  }
+  .modal-close:hover { background: var(--bg3); color: var(--text); }
+  .modal-body { padding: 22px; }
+  .modal-footer {
+    padding: 16px 22px; border-top: 1px solid var(--border);
+    display: flex; gap: 10px; justify-content: flex-end;
+  }
+
+  /* ── ACTION BUTTONS on trades ── */
+  .trade-actions { display: flex; gap: 6px; }
+  .btn-icon {
+    width: 28px; height: 28px; border-radius: 6px;
+    border: 1px solid var(--border2); background: none;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .btn-icon svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .btn-icon.edit { color: var(--muted2); }
+  .btn-icon.edit:hover { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+  .btn-icon.del { color: var(--muted); }
+  .btn-icon.del:hover { background: var(--red-dim); border-color: rgba(224,92,92,0.3); color: var(--red); }
+
+  /* ── WEEKLY PAGE ── */
+  .week-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; margin-bottom: 12px; overflow: hidden;
+  }
+  .week-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px; cursor: pointer; transition: background 0.15s;
+  }
+  .week-header:hover { background: var(--bg3); }
+  .week-label { font-size: 13px; font-weight: 600; color: var(--text); }
+  .week-meta { display: flex; align-items: center; gap: 14px; }
+  .week-pnl { font-size: 15px; font-weight: 700; }
+  .week-count { font-size: 12px; color: var(--muted2); }
+  .week-chevron { color: var(--muted); font-size: 12px; transition: transform 0.2s; }
+  .week-body { display: none; border-top: 1px solid var(--border); padding: 14px 18px; }
+  .week-body.open { display: block; }
+
+  .week-stat-row { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .week-stat { flex: 1; min-width: 100px; background: var(--bg3); border-radius: 8px; padding: 10px 12px; }
+  .week-stat .wsl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .week-stat .wsv { font-size: 16px; font-weight: 700; color: var(--text); }
+
+  @media (max-width: 768px) {
+    .modal { max-height: 95vh; border-radius: 20px 20px 0 0; margin-top: auto; }
+    .modal-overlay { align-items: flex-end; padding: 0; }
+    .modal-footer { flex-direction: column; }
+    .modal-footer button { width: 100%; }
+  }
   .trade-card-m { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; }
   .trade-card-m .tcm-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
   .trade-card-m .tcm-sym { font-size: 15px; font-weight: 700; color: var(--text); }
@@ -464,6 +548,96 @@
   </div>
 </div>
 
+
+<!-- ── EDIT TRADE MODAL ── -->
+<div class="modal-overlay" id="edit-modal" onclick="closeEditModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Edit trade</div>
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id">
+      <div class="form-grid three" style="margin-bottom:16px;">
+        <div class="form-group">
+          <label class="form-label">Symbol</label>
+          <input type="text" class="form-input" id="edit-symbol" oninput="this.value=this.value.toUpperCase();calcEditPnl()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Type</label>
+          <select class="form-select" id="edit-type" onchange="calcEditPnl()">
+            <option value="LONG">Long (Buy)</option>
+            <option value="SHORT">Short (Sell)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          <input type="datetime-local" class="form-input" id="edit-date">
+        </div>
+      </div>
+      <div class="form-grid three" style="margin-bottom:16px;">
+        <div class="form-group">
+          <label class="form-label">Entry price (₹)</label>
+          <input type="number" class="form-input" id="edit-entry" oninput="calcEditPnl()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Exit price (₹)</label>
+          <input type="number" class="form-input" id="edit-exit" oninput="calcEditPnl()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Quantity</label>
+          <input type="number" class="form-input" id="edit-qty" oninput="calcEditPnl()">
+        </div>
+      </div>
+      <div class="form-grid" style="margin-bottom:16px;">
+        <div class="form-group">
+          <label class="form-label">Strategy</label>
+          <input type="text" class="form-input" id="edit-strategy">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Emotion</label>
+          <select class="form-select" id="edit-emotion">
+            <option value="">None</option>
+            <option>Calm</option><option>Confident</option><option>Fear</option>
+            <option>Greed</option><option>FOMO</option><option>Revenge</option>
+            <option>Bored</option><option>Rushed</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:16px;">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="edit-notes" style="min-height:70px;"></textarea>
+      </div>
+      <div class="pnl-preview">
+        <div class="label">Updated P&L</div>
+        <div class="amount" id="edit-pnl-preview" style="color:var(--muted2);">₹0</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeEditModal()" style="padding:10px 20px;">Cancel</button>
+      <button class="btn-submit" onclick="saveEdit()" style="padding:10px 24px;" id="edit-save-btn">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── CONFIRM DELETE MODAL ── -->
+<div class="modal-overlay" id="delete-modal" onclick="closeDeleteModal(event)">
+  <div class="modal" style="max-width:380px;" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Delete trade?</div>
+      <button class="modal-close" onclick="closeDeleteModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:14px;color:var(--muted2);line-height:1.6;">This will permanently delete this trade and update your stats. This cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeDeleteModal()" style="padding:10px 20px;">Cancel</button>
+      <button class="btn-submit" onclick="confirmDelete()" id="del-confirm-btn"
+        style="padding:10px 24px;background:var(--red);border-color:var(--red);color:#fff;">Delete</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── APP SCREEN ── -->
 <div id="app-screen" class="screen">
 
@@ -495,6 +669,10 @@
       <button class="nav-item" onclick="showPage('analytics')">
         <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         Analytics
+      </button>
+      <button class="nav-item" onclick="showPage('weekly')">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Weekly
       </button>
     </div>
 
@@ -540,6 +718,24 @@
           <div class="stat-label">Avg P&L / trade</div>
           <div class="stat-value" id="stat-avg">₹0</div>
           <div class="stat-change neutral">Per trade</div>
+        </div>
+      </div>
+
+      <!-- Equity Curve -->
+      <div class="card" id="equity-card">
+        <div class="card-header">
+          <div class="card-title">Equity curve</div>
+          <div style="display:flex;gap:6px;" id="equity-filters">
+            <button class="eq-filter active" onclick="setEquityFilter(this,'all')">All</button>
+            <button class="eq-filter" onclick="setEquityFilter(this,'30')">30d</button>
+            <button class="eq-filter" onclick="setEquityFilter(this,'7')">7d</button>
+          </div>
+        </div>
+        <div class="card-body" style="padding:20px;">
+          <div id="equity-empty" style="display:none;" class="empty-state" ><p>Log at least 2 trades to see your equity curve.</p></div>
+          <div id="equity-chart-wrap" style="position:relative;height:200px;">
+            <canvas id="equity-chart"></canvas>
+          </div>
         </div>
       </div>
 
@@ -728,7 +924,40 @@
         <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         Analytics
       </button>
+      <button class="bn-item" id="bn-weekly" onclick="showPage('weekly')">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Weekly
+      </button>
     </div>
+    <!-- Weekly Summary -->
+    <div class="page" id="page-weekly">
+      <div class="page-header">
+        <div class="page-title">Weekly summary</div>
+        <div class="page-sub">Your performance broken down week by week</div>
+      </div>
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px;">
+        <div class="stat-card">
+          <div class="stat-label">Best week</div>
+          <div class="stat-value pnl-up" id="ws-best">₹0</div>
+          <div class="stat-change neutral" id="ws-best-date">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Worst week</div>
+          <div class="stat-value pnl-dn" id="ws-worst">₹0</div>
+          <div class="stat-change neutral" id="ws-worst-date">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Profitable weeks</div>
+          <div class="stat-value" id="ws-pos-pct">—</div>
+          <div class="stat-change neutral" id="ws-pos-sub">of all weeks</div>
+        </div>
+      </div>
+      <div id="weekly-list">
+        <div class="empty-state"><p>Log trades to see your weekly breakdown.</p></div>
+      </div>
+    </div>
+
+
   </div>
 </div>
 
@@ -861,6 +1090,7 @@ function showPage(name) {
   const bnEl = document.getElementById('bn-' + name);
   if (bnEl) bnEl.classList.add('active');
   if (name === 'analytics') renderAnalytics();
+  if (name === 'weekly') renderWeekly();
   window.scrollTo(0, 0);
 }
 
@@ -881,6 +1111,105 @@ async function loadTrades() {
   renderAllTrades();
 }
 
+
+let equityChart = null;
+let equityFilter = 'all';
+
+function setEquityFilter(btn, filter) {
+  document.querySelectorAll('.eq-filter').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  equityFilter = filter;
+  renderEquityCurve();
+}
+
+function renderEquityCurve() {
+  if (!allTrades.length) return;
+
+  const sorted = [...allTrades]
+    .filter(t => t.traded_at)
+    .sort((a,b) => new Date(a.traded_at) - new Date(b.traded_at));
+
+  let filtered = sorted;
+  if (equityFilter !== 'all') {
+    const days = parseInt(equityFilter);
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - days);
+    filtered = sorted.filter(t => new Date(t.traded_at) >= cutoff);
+  }
+
+  const wrap = document.getElementById('equity-chart-wrap');
+  const empty = document.getElementById('equity-empty');
+
+  if (filtered.length < 2) {
+    wrap.style.display = 'none'; empty.style.display = 'block'; return;
+  }
+  wrap.style.display = 'block'; empty.style.display = 'none';
+
+  let running = 0;
+  const points = filtered.map(t => {
+    running += (t.pnl || 0);
+    return { x: new Date(t.traded_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short'}), y: Math.round(running) };
+  });
+
+  const isProfit = running >= 0;
+  const lineColor = isProfit ? '#2ecc8a' : '#e05c5c';
+  const fillColor = isProfit ? 'rgba(46,204,138,0.08)' : 'rgba(224,92,92,0.08)';
+
+  if (equityChart) { equityChart.destroy(); equityChart = null; }
+
+  const ctx = document.getElementById('equity-chart').getContext('2d');
+  equityChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: points.map(p => p.x),
+      datasets: [{
+        data: points.map(p => p.y),
+        borderColor: lineColor,
+        backgroundColor: fillColor,
+        borderWidth: 2,
+        pointRadius: points.length > 30 ? 0 : 3,
+        pointHoverRadius: 5,
+        pointBackgroundColor: lineColor,
+        fill: true,
+        tension: 0.35
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0d0f12',
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          titleColor: '#9a9da3',
+          bodyColor: lineColor,
+          bodyFont: { family: ''Syne', sans-serif', weight: '700', size: 14 },
+          titleFont: { family: ''Syne', sans-serif', size: 11 },
+          padding: 12,
+          callbacks: {
+            label: ctx => (ctx.parsed.y >= 0 ? '+' : '') + '\u20b9' + ctx.parsed.y.toLocaleString('en-IN')
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+          ticks: { color: '#6b6d72', font: { family: ''Syne', sans-serif', size: 11 },
+            maxTicksLimit: 8, maxRotation: 0 }
+        },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+          ticks: {
+            color: '#6b6d72', font: { family: ''Syne', sans-serif', size: 11 },
+            callback: v => '\u20b9' + v.toLocaleString('en-IN')
+          }
+        }
+      }
+    }
+  });
+}
+
 function renderDashboard() {
   const total = allTrades.length;
   const pnl = allTrades.reduce((s, t) => s + (t.pnl || 0), 0);
@@ -899,6 +1228,7 @@ function renderDashboard() {
   document.getElementById('stat-total').textContent = total;
   document.getElementById('stat-avg').textContent = '₹' + Math.abs(avg).toLocaleString('en-IN');
   document.getElementById('stat-avg').className = 'stat-value ' + (avg >= 0 ? 'pnl-up' : 'pnl-dn');
+  renderEquityCurve();
 
   const body = document.getElementById('recent-trades-body');
   const recent = allTrades.slice(0, 8);
@@ -929,7 +1259,15 @@ function tradeCardsHTML(trades) {
     return `<div class="trade-card-m">
       <div class="tcm-top">
         <span class="tcm-sym">${t.symbol||'—'}</span>
-        <span class="tcm-pnl ${pos?'pnl-up':'pnl-dn'}">${pos?'+':''}&#8377;${Math.abs(Math.round(pnl)).toLocaleString('en-IN')}</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="tcm-pnl ${pos?'pnl-up':'pnl-dn'}">${pos?'+':''}&#8377;${Math.abs(Math.round(pnl)).toLocaleString('en-IN')}</span>
+          <button class="btn-icon edit" onclick="openEditModal('${t.id}')" title="Edit">
+            <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="btn-icon del" onclick="openDeleteModal('${t.id}')" title="Delete">
+            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </div>
       </div>
       <div class="tcm-meta">
         <span class="badge ${t.trade_type==='LONG'?'badge-long':'badge-short'}">${t.trade_type||'—'}</span>
@@ -944,18 +1282,28 @@ function tradeCardsHTML(trades) {
 function tradesTableHTML(trades) {
   return `<table class="trades-table">
     <thead><tr>
-      <th>Symbol</th><th>Type</th><th>Entry</th><th>Exit</th><th>Qty</th><th>P&L</th><th>Emotion</th><th>Date</th>
+      <th>Symbol</th><th>Type</th><th>Entry</th><th>Exit</th><th>Qty</th><th>P&L</th><th>Emotion</th><th>Date</th><th></th>
     </tr></thead>
     <tbody>${trades.map(t => `
       <tr>
         <td><span class="sym">${t.symbol || '—'}</span></td>
         <td><span class="badge ${t.trade_type==='LONG'?'badge-long':'badge-short'}">${t.trade_type||'—'}</span></td>
-        <td>₹${(t.entry_price||0).toLocaleString('en-IN')}</td>
-        <td>₹${(t.exit_price||0).toLocaleString('en-IN')}</td>
+        <td>&#8377;${(t.entry_price||0).toLocaleString('en-IN')}</td>
+        <td>&#8377;${(t.exit_price||0).toLocaleString('en-IN')}</td>
         <td>${t.quantity||'—'}</td>
-        <td class="${(t.pnl||0)>=0?'pnl-up':'pnl-dn'}">${(t.pnl||0)>=0?'+':''}₹${Math.abs(Math.round(t.pnl||0)).toLocaleString('en-IN')}</td>
+        <td class="${(t.pnl||0)>=0?'pnl-up':'pnl-dn'}">${(t.pnl||0)>=0?'+':''}&#8377;${Math.abs(Math.round(t.pnl||0)).toLocaleString('en-IN')}</td>
         <td>${t.emotion||'—'}</td>
         <td>${t.traded_at ? new Date(t.traded_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short'}) : '—'}</td>
+        <td>
+          <div class="trade-actions">
+            <button class="btn-icon edit" onclick="openEditModal('${t.id}')" title="Edit">
+              <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="btn-icon del" onclick="openDeleteModal('${t.id}')" title="Delete">
+              <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </button>
+          </div>
+        </td>
       </tr>`).join('')}
     </tbody></table>`;
 }
@@ -1087,6 +1435,184 @@ function renderAnalytics() {
         </div>`;
       }).join('') + '</div>';
   }
+}
+
+
+/* ── EDIT & DELETE ── */
+let deleteTargetId = null;
+
+function openEditModal(id) {
+  const t = allTrades.find(x => x.id === id);
+  if (!t) return;
+  document.getElementById('edit-id').value = t.id;
+  document.getElementById('edit-symbol').value = t.symbol || '';
+  document.getElementById('edit-type').value = t.trade_type || 'LONG';
+  document.getElementById('edit-entry').value = t.entry_price || '';
+  document.getElementById('edit-exit').value = t.exit_price || '';
+  document.getElementById('edit-qty').value = t.quantity || '';
+  document.getElementById('edit-strategy').value = t.strategy || '';
+  document.getElementById('edit-emotion').value = t.emotion || '';
+  document.getElementById('edit-notes').value = t.notes || '';
+  if (t.traded_at) {
+    const d = new Date(t.traded_at);
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    document.getElementById('edit-date').value = d.toISOString().slice(0,16);
+  }
+  calcEditPnl();
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function closeEditModal(e) {
+  if (!e || e.target === document.getElementById('edit-modal'))
+    document.getElementById('edit-modal').classList.remove('open');
+}
+
+function calcEditPnl() {
+  const entry = parseFloat(document.getElementById('edit-entry').value) || 0;
+  const exit  = parseFloat(document.getElementById('edit-exit').value) || 0;
+  const qty   = parseFloat(document.getElementById('edit-qty').value) || 0;
+  const type  = document.getElementById('edit-type').value;
+  const pnl   = type === 'LONG' ? (exit - entry) * qty : (entry - exit) * qty;
+  const el = document.getElementById('edit-pnl-preview');
+  el.textContent = (pnl >= 0 ? '+' : '') + '\u20b9' + Math.round(pnl).toLocaleString('en-IN');
+  el.style.color = pnl > 0 ? 'var(--green)' : pnl < 0 ? 'var(--red)' : 'var(--muted2)';
+}
+
+async function saveEdit() {
+  const id       = document.getElementById('edit-id').value;
+  const symbol   = document.getElementById('edit-symbol').value.trim();
+  const type     = document.getElementById('edit-type').value;
+  const entry    = parseFloat(document.getElementById('edit-entry').value);
+  const exit     = parseFloat(document.getElementById('edit-exit').value);
+  const qty      = parseFloat(document.getElementById('edit-qty').value);
+  const strategy = document.getElementById('edit-strategy').value.trim();
+  const emotion  = document.getElementById('edit-emotion').value;
+  const notes    = document.getElementById('edit-notes').value.trim();
+  const dateVal  = document.getElementById('edit-date').value;
+  if (!symbol || !entry || !exit || !qty) { showToast('Please fill required fields', 'error'); return; }
+  const pnl = type === 'LONG' ? (exit - entry) * qty : (entry - exit) * qty;
+  const btn = document.getElementById('edit-save-btn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  const { error } = await sb.from('trades').update({
+    symbol, trade_type: type, entry_price: entry, exit_price: exit,
+    quantity: qty, pnl, strategy, emotion, notes,
+    traded_at: dateVal ? new Date(dateVal).toISOString() : undefined
+  }).eq('id', id);
+  btn.disabled = false; btn.textContent = 'Save changes';
+  if (error) { showToast('Error saving: ' + error.message, 'error'); return; }
+  document.getElementById('edit-modal').classList.remove('open');
+  showToast('Trade updated!', 'success');
+  await loadTrades();
+}
+
+function openDeleteModal(id) {
+  deleteTargetId = id;
+  document.getElementById('delete-modal').classList.add('open');
+}
+
+function closeDeleteModal(e) {
+  if (!e || e.target === document.getElementById('delete-modal')) {
+    document.getElementById('delete-modal').classList.remove('open');
+    deleteTargetId = null;
+  }
+}
+
+async function confirmDelete() {
+  if (!deleteTargetId) return;
+  const btn = document.getElementById('del-confirm-btn');
+  btn.disabled = true; btn.textContent = 'Deleting...';
+  const { error } = await sb.from('trades').delete().eq('id', deleteTargetId);
+  btn.disabled = false; btn.textContent = 'Delete';
+  if (error) { showToast('Error deleting: ' + error.message, 'error'); return; }
+  document.getElementById('delete-modal').classList.remove('open');
+  deleteTargetId = null;
+  showToast('Trade deleted', 'success');
+  await loadTrades();
+}
+
+/* ── WEEKLY SUMMARY ── */
+function getWeekKey(dateStr) {
+  const d = new Date(dateStr);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const mon = new Date(d.setDate(diff));
+  return mon.toISOString().slice(0,10);
+}
+
+function renderWeekly() {
+  if (!allTrades.length) return;
+  const weeks = {};
+  allTrades.filter(t => t.traded_at).forEach(t => {
+    const wk = getWeekKey(t.traded_at);
+    if (!weeks[wk]) weeks[wk] = { trades: [], pnl: 0, wins: 0 };
+    weeks[wk].trades.push(t);
+    weeks[wk].pnl += (t.pnl || 0);
+    if ((t.pnl || 0) > 0) weeks[wk].wins++;
+  });
+
+  const sorted = Object.entries(weeks).sort((a,b) => b[0].localeCompare(a[0]));
+  if (!sorted.length) return;
+
+  const pnls = sorted.map(([,w]) => w.pnl);
+  const bestIdx  = pnls.indexOf(Math.max(...pnls));
+  const worstIdx = pnls.indexOf(Math.min(...pnls));
+  const posWeeks = pnls.filter(p => p >= 0).length;
+
+  function wkLabel(key) {
+    const start = new Date(key);
+    const end = new Date(key); end.setDate(end.getDate() + 6);
+    const fmt = d => d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
+    return fmt(start) + ' – ' + fmt(end);
+  }
+
+  document.getElementById('ws-best').textContent = '+\u20b9' + Math.round(Math.max(...pnls)).toLocaleString('en-IN');
+  document.getElementById('ws-best-date').textContent = wkLabel(sorted[bestIdx][0]);
+  document.getElementById('ws-worst').textContent = '\u20b9' + Math.round(Math.min(...pnls)).toLocaleString('en-IN');
+  document.getElementById('ws-worst-date').textContent = wkLabel(sorted[worstIdx][0]);
+  document.getElementById('ws-pos-pct').textContent = Math.round((posWeeks/sorted.length)*100) + '%';
+  document.getElementById('ws-pos-sub').textContent = posWeeks + ' of ' + sorted.length + ' weeks';
+
+  document.getElementById('weekly-list').innerHTML = sorted.map(([key, w], i) => {
+    const pos = w.pnl >= 0;
+    const wr = w.trades.length > 0 ? Math.round((w.wins/w.trades.length)*100) : 0;
+    const best  = w.trades.reduce((a,b) => ((a.pnl||0) > (b.pnl||0) ? a : b));
+    const worst = w.trades.reduce((a,b) => ((a.pnl||0) < (b.pnl||0) ? a : b));
+    return `<div class="week-card">
+      <div class="week-header" onclick="toggleWeek('wk${i}')">
+        <div class="week-label">${wkLabel(key)}</div>
+        <div class="week-meta">
+          <span class="week-count">${w.trades.length} trades</span>
+          <span class="week-pnl ${pos?'pnl-up':'pnl-dn'}">${pos?'+':''}\u20b9${Math.abs(Math.round(w.pnl)).toLocaleString('en-IN')}</span>
+          <span class="week-chevron" id="chev-wk${i}">▼</span>
+        </div>
+      </div>
+      <div class="week-body" id="wk${i}">
+        <div class="week-stat-row">
+          <div class="week-stat"><div class="wsl">Win rate</div><div class="wsv">${wr}%</div></div>
+          <div class="week-stat"><div class="wsl">Best trade</div><div class="wsv pnl-up">+\u20b9${Math.abs(Math.round(best.pnl||0)).toLocaleString('en-IN')}</div></div>
+          <div class="week-stat"><div class="wsl">Worst trade</div><div class="wsv pnl-dn">\u20b9${Math.abs(Math.round(worst.pnl||0)).toLocaleString('en-IN')}</div></div>
+          <div class="week-stat"><div class="wsl">Net P&L</div><div class="wsv ${pos?'pnl-up':'pnl-dn'}">${pos?'+':''}\u20b9${Math.abs(Math.round(w.pnl)).toLocaleString('en-IN')}</div></div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;">Trades this week</div>
+        ${w.trades.map(t => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-weight:700;color:var(--text)">${t.symbol||'—'}</span>
+              <span class="badge ${t.trade_type==='LONG'?'badge-long':'badge-short'}">${t.trade_type||'—'}</span>
+              ${t.emotion ? '<span style="color:var(--muted2)">'+t.emotion+'</span>' : ''}
+            </div>
+            <span class="${(t.pnl||0)>=0?'pnl-up':'pnl-dn'}">${(t.pnl||0)>=0?'+':''}\u20b9${Math.abs(Math.round(t.pnl||0)).toLocaleString('en-IN')}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleWeek(id) {
+  const body = document.getElementById(id);
+  const chev = document.getElementById('chev-' + id);
+  const open = body.classList.toggle('open');
+  if (chev) chev.textContent = open ? '▲' : '▼';
 }
 
 /* ── TOAST ── */
