@@ -1463,7 +1463,7 @@ function tradesTableHTML(trades) {
         <td class="${(t.pnl||0)>=0?'pnl-up':'pnl-dn'}">${(t.pnl||0)>=0?'+':''}&#8377;${Math.abs(Math.round(t.pnl||0)).toLocaleString('en-IN')}</td>
         <td>${t.emotion||'—'}</td>
         <td>${t.traded_at ? new Date(t.traded_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short'}) : '—'}</td>
-        <td>${t.screenshot_url ? '<img class="thumb" src="'+t.screenshot_url+'" onclick="openLightbox(\'' + t.screenshot_url + '\'')" alt="chart">' : '—'}</td>
+         <td>${t.screenshot_url ? '<img class="thumb" src="' + t.screenshot_url + '" onclick="openLightbox(event)" data-url="' + t.screenshot_url + '" alt="chart">' : '\u2014'}</td>
         <td>
           <div class="trade-actions">
             <button class="btn-icon edit" onclick="openEditModal('${t.id}')" title="Edit">
@@ -1822,7 +1822,8 @@ function removeScreenshot() {
   if (zone) zone.style.display = 'block';
 }
 
-function openLightbox(url) {
+function openLightbox(evtOrUrl) {
+  const url = (evtOrUrl && evtOrUrl.target) ? evtOrUrl.target.dataset.url : evtOrUrl;
   document.getElementById('lightbox-img').src = url;
   document.getElementById('lightbox').classList.add('open');
 }
