@@ -1185,8 +1185,8 @@ function renderEquityCurve() {
           borderWidth: 1,
           titleColor: '#9a9da3',
           bodyColor: lineColor,
-          bodyFont: { family: ''Syne', sans-serif', weight: '700', size: 14 },
-          titleFont: { family: ''Syne', sans-serif', size: 11 },
+          bodyFont: { size: 14, weight: '700' },
+          titleFont: { size: 11 },
           padding: 12,
           callbacks: {
             label: ctx => (ctx.parsed.y >= 0 ? '+' : '') + '\u20b9' + ctx.parsed.y.toLocaleString('en-IN')
@@ -1196,13 +1196,13 @@ function renderEquityCurve() {
       scales: {
         x: {
           grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
-          ticks: { color: '#6b6d72', font: { family: ''Syne', sans-serif', size: 11 },
+          ticks: { color: '#6b6d72', font: { size: 11 },
             maxTicksLimit: 8, maxRotation: 0 }
         },
         y: {
           grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
           ticks: {
-            color: '#6b6d72', font: { family: ''Syne', sans-serif', size: 11 },
+            color: '#6b6d72', font: { size: 11 },
             callback: v => '\u20b9' + v.toLocaleString('en-IN')
           }
         }
