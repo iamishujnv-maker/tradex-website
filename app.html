@@ -445,6 +445,78 @@
     .modal-footer { flex-direction: column; }
     .modal-footer button { width: 100%; }
   }
+
+  /* ── SCREENSHOT UPLOAD ── */
+  .upload-zone {
+    border: 1.5px dashed var(--border2); border-radius: 10px;
+    padding: 24px 16px; text-align: center; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .upload-zone:hover { border-color: var(--gold); background: var(--gold-dim); }
+  .upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-zone .uz-icon { font-size: 22px; margin-bottom: 6px; }
+  .upload-zone .uz-text { font-size: 13px; color: var(--muted2); }
+  .upload-zone .uz-hint { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .screenshot-preview { position: relative; margin-top: 10px; }
+  .screenshot-preview img { width: 100%; border-radius: 8px; border: 1px solid var(--border); max-height: 200px; object-fit: cover; }
+  .screenshot-remove { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,0.7); border: none; color: #fff; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+  /* ── AI PANEL ── */
+  .ai-panel {
+    background: var(--bg3); border: 1px solid rgba(212,168,67,0.2);
+    border-radius: 12px; overflow: hidden; margin-bottom: 20px;
+  }
+  .ai-panel-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+    background: var(--gold-dim);
+  }
+  .ai-dot-pulse {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--gold);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .ai-panel-header span { font-size: 13px; font-weight: 600; color: var(--gold); }
+  .ai-panel-body { padding: 18px; font-size: 14px; color: var(--muted2); line-height: 1.75; }
+  .ai-panel-body strong { color: var(--text); font-weight: 500; }
+  .ai-panel-body .ai-good { color: var(--green); font-weight: 500; }
+  .ai-panel-body .ai-bad  { color: var(--red);   font-weight: 500; }
+  .ai-panel-body .ai-gold { color: var(--gold);  font-weight: 500; }
+  .ai-generating {
+    display: flex; align-items: center; gap: 10px;
+    padding: 18px; font-size: 13px; color: var(--muted2);
+  }
+  .ai-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .ai-tag { font-size: 11px; padding: 4px 12px; border-radius: 20px; font-weight: 600; }
+  .ai-tag-green { background: var(--green-dim); color: var(--green); border: 1px solid rgba(46,204,138,0.25); }
+  .ai-tag-red   { background: var(--red-dim);   color: var(--red);   border: 1px solid rgba(224,92,92,0.25); }
+  .ai-tag-gold  { background: var(--gold-dim);  color: var(--gold);  border: 1px solid rgba(212,168,67,0.25); }
+
+  /* ── PSYCHOLOGY SCORE ── */
+  .psych-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px; margin-bottom: 20px;
+  }
+  .psych-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .psych-score-wrap { display: flex; align-items: baseline; gap: 6px; }
+  .psych-score { font-size: 48px; font-weight: 700; letter-spacing: -2px; font-family: "Instrument Serif", serif; }
+  .psych-score-max { font-size: 18px; color: var(--muted2); }
+  .psych-label { font-size: 13px; font-weight: 600; padding: 4px 12px; border-radius: 20px; }
+  .psych-bars { display: flex; flex-direction: column; gap: 10px; }
+  .psych-bar-row { display: flex; align-items: center; gap: 10px; }
+  .psych-bar-label { font-size: 12px; color: var(--muted2); width: 130px; flex-shrink: 0; }
+  .psych-bar-track { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .psych-bar-fill  { height: 6px; border-radius: 3px; transition: width 0.6s ease; }
+  .psych-bar-val { font-size: 12px; font-weight: 600; color: var(--text); width: 32px; text-align: right; }
+
+  /* ── TRADE SCREENSHOT in table/card ── */
+  .thumb { width: 36px; height: 28px; border-radius: 4px; object-fit: cover; border: 1px solid var(--border); cursor: pointer; }
+
+  /* ── IMAGE LIGHTBOX ── */
+  .lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 500; align-items: center; justify-content: center; }
+  .lightbox.open { display: flex; }
+  .lightbox img { max-width: 90vw; max-height: 88vh; border-radius: 8px; }
+  .lightbox-close { position: absolute; top: 18px; right: 22px; font-size: 28px; color: #fff; cursor: pointer; background: none; border: none; }
   .trade-card-m { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; }
   .trade-card-m .tcm-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
   .trade-card-m .tcm-sym { font-size: 15px; font-weight: 700; color: var(--text); }
@@ -673,6 +745,10 @@
         <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         Weekly
       </button>
+      <button class="nav-item" onclick="showPage('ai')">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        AI insights
+      </button>
     </div>
 
     <div class="sidebar-bottom">
@@ -856,9 +932,90 @@
         </div>
       </div>
 
+
+        <div class="form-group" style="margin-top:16px;">
+          <label class="form-label">Trade screenshot (optional)</label>
+          <div class="upload-zone" id="upload-zone">
+            <input type="file" id="t-screenshot" accept="image/*" onchange="previewScreenshot(this)">
+            <div class="uz-icon">📸</div>
+            <div class="uz-text">Tap to upload chart screenshot</div>
+            <div class="uz-hint">PNG, JPG up to 5MB</div>
+          </div>
+          <div class="screenshot-preview" id="screenshot-preview" style="display:none;">
+            <img id="screenshot-img" src="" alt="screenshot">
+            <button class="screenshot-remove" onclick="removeScreenshot()">✕</button>
+          </div>
+        </div>
       <div class="form-actions">
         <button class="btn-submit" onclick="submitTrade()">Save trade →</button>
         <button class="btn-secondary" onclick="resetForm()">Clear form</button>
+      </div>
+    </div>
+
+
+    <!-- AI Insights -->
+    <div class="page" id="page-ai">
+      <div class="page-header">
+        <div class="page-title">AI insights</div>
+        <div class="page-sub">Powered by Claude — your personal trading analyst</div>
+      </div>
+
+      <!-- Psychology Score -->
+      <div class="psych-card" id="psych-card">
+        <div class="psych-top">
+          <div>
+            <div style="font-size:11px;color:var(--muted);font-weight:600;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;">Psychology score</div>
+            <div class="psych-score-wrap">
+              <div class="psych-score" id="psych-score-num" style="color:var(--gold)">—</div>
+              <div class="psych-score-max">/100</div>
+            </div>
+          </div>
+          <div class="psych-label" id="psych-label" style="background:var(--gold-dim);color:var(--gold)">Not enough data</div>
+        </div>
+        <div class="psych-bars" id="psych-bars">
+          <div class="psych-bar-row">
+            <div class="psych-bar-label">Emotional discipline</div>
+            <div class="psych-bar-track"><div class="psych-bar-fill" id="pb-discipline" style="width:0%;background:var(--gold)"></div></div>
+            <div class="psych-bar-val" id="pv-discipline">—</div>
+          </div>
+          <div class="psych-bar-row">
+            <div class="psych-bar-label">Win consistency</div>
+            <div class="psych-bar-track"><div class="psych-bar-fill" id="pb-consistency" style="width:0%;background:var(--green)"></div></div>
+            <div class="psych-bar-val" id="pv-consistency">—</div>
+          </div>
+          <div class="psych-bar-row">
+            <div class="psych-bar-label">Loss management</div>
+            <div class="psych-bar-track"><div class="psych-bar-fill" id="pb-loss" style="width:0%;background:var(--green)"></div></div>
+            <div class="psych-bar-val" id="pv-loss">—</div>
+          </div>
+          <div class="psych-bar-row">
+            <div class="psych-bar-label">Revenge trading</div>
+            <div class="psych-bar-track"><div class="psych-bar-fill" id="pb-revenge" style="width:0%;background:var(--red)"></div></div>
+            <div class="psych-bar-val" id="pv-revenge">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Trade Summariser -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Trade analyser</div>
+          <button class="btn-submit" style="padding:8px 18px;font-size:13px;" onclick="runTradeAnalysis()">Analyse my trades</button>
+        </div>
+        <div class="card-body" style="padding:18px;" id="ai-analysis-body">
+          <p style="font-size:13px;color:var(--muted2);">Click "Analyse my trades" and Claude will read your full trade history and give you a detailed breakdown of your patterns, strengths, and exactly what to fix.</p>
+        </div>
+      </div>
+
+      <!-- Weekly AI Report -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Weekly AI report</div>
+          <button class="btn-submit" style="padding:8px 18px;font-size:13px;" onclick="runWeeklyReport()">Generate this week</button>
+        </div>
+        <div class="card-body" style="padding:18px;" id="ai-weekly-body">
+          <p style="font-size:13px;color:var(--muted2);">Get a plain-English breakdown of your trading week — what worked, what didn't, and what to focus on next week.</p>
+        </div>
       </div>
     </div>
 
@@ -927,6 +1084,10 @@
         <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         Weekly
       </button>
+      <button class="bn-item" id="bn-ai" onclick="showPage('ai')">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        AI
+      </button>
     </div>
     <!-- Weekly Summary -->
     <div class="page" id="page-weekly">
@@ -958,6 +1119,12 @@
 
 
   </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt="screenshot">
 </div>
 
 <!-- Toast -->
@@ -1092,6 +1259,7 @@ function showPage(name) {
   if (bnEl) bnEl.classList.add('active');
   if (name === 'analytics') renderAnalytics();
   if (name === 'weekly') renderWeekly();
+  if (name === 'ai') renderPsychScore();
   window.scrollTo(0, 0);
 }
 
@@ -1283,7 +1451,7 @@ function tradeCardsHTML(trades) {
 function tradesTableHTML(trades) {
   return `<table class="trades-table">
     <thead><tr>
-      <th>Symbol</th><th>Type</th><th>Entry</th><th>Exit</th><th>Qty</th><th>P&L</th><th>Emotion</th><th>Date</th><th></th>
+      <th>Symbol</th><th>Type</th><th>Entry</th><th>Exit</th><th>Qty</th><th>P&L</th><th>Emotion</th><th>Date</th><th>Chart</th><th></th>
     </tr></thead>
     <tbody>${trades.map(t => `
       <tr>
@@ -1295,6 +1463,7 @@ function tradesTableHTML(trades) {
         <td class="${(t.pnl||0)>=0?'pnl-up':'pnl-dn'}">${(t.pnl||0)>=0?'+':''}&#8377;${Math.abs(Math.round(t.pnl||0)).toLocaleString('en-IN')}</td>
         <td>${t.emotion||'—'}</td>
         <td>${t.traded_at ? new Date(t.traded_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short'}) : '—'}</td>
+        <td>${t.screenshot_url ? '<img class="thumb" src="'+t.screenshot_url+'" onclick="openLightbox(\'' + t.screenshot_url + '\'')" alt="chart">' : '—'}</td>
         <td>
           <div class="trade-actions">
             <button class="btn-icon edit" onclick="openEditModal('${t.id}')" title="Edit">
@@ -1346,10 +1515,24 @@ async function submitTrade() {
   const btn = document.querySelector('#page-add-trade .btn-submit');
   btn.disabled = true; btn.textContent = 'Saving...';
 
+  let screenshotUrl = null;
+  const fileInput = document.getElementById('t-screenshot');
+  if (fileInput && fileInput.files[0]) {
+    const file = fileInput.files[0];
+    const ext = file.name.split('.').pop();
+    const path = currentUser.id + '/' + Date.now() + '.' + ext;
+    const { data: upData, error: upErr } = await sb.storage.from('screenshots').upload(path, file, { upsert: true });
+    if (!upErr) {
+      const { data: urlData } = sb.storage.from('screenshots').getPublicUrl(path);
+      screenshotUrl = urlData.publicUrl;
+    }
+  }
+
   const { error } = await sb.from('trades').insert({
     user_id: currentUser.id, symbol, trade_type: type,
     entry_price: entry, exit_price: exit, quantity: qty, pnl,
     strategy, notes, emotion: selectedEmotion,
+    screenshot_url: screenshotUrl,
     traded_at: dateVal ? new Date(dateVal).toISOString() : new Date().toISOString()
   });
 
@@ -1371,6 +1554,7 @@ function resetForm() {
   selectedEmotion = '';
   document.getElementById('pnl-preview-val').textContent = '₹0';
   document.getElementById('pnl-preview-val').style.color = 'var(--muted2)';
+  removeScreenshot();
   setDefaultDate();
 }
 
@@ -1614,6 +1798,204 @@ function toggleWeek(id) {
   const chev = document.getElementById('chev-' + id);
   const open = body.classList.toggle('open');
   if (chev) chev.textContent = open ? '▲' : '▼';
+}
+
+
+/* ── SCREENSHOT ── */
+function previewScreenshot(input) {
+  if (!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('screenshot-img').src = e.target.result;
+    document.getElementById('screenshot-preview').style.display = 'block';
+    document.getElementById('upload-zone').style.display = 'none';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function removeScreenshot() {
+  const inp = document.getElementById('t-screenshot');
+  if (inp) inp.value = '';
+  const prev = document.getElementById('screenshot-preview');
+  const zone = document.getElementById('upload-zone');
+  if (prev) prev.style.display = 'none';
+  if (zone) zone.style.display = 'block';
+}
+
+function openLightbox(url) {
+  document.getElementById('lightbox-img').src = url;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+}
+
+/* ── PSYCHOLOGY SCORE ── */
+function calcPsychScore() {
+  if (allTrades.length < 3) return null;
+  const badEmotions = ['Fear','Greed','FOMO','Revenge','Rushed'];
+  const total   = allTrades.length;
+  const wins    = allTrades.filter(t => (t.pnl||0) > 0).length;
+  const revenge = allTrades.filter(t => t.emotion === 'Revenge').length;
+  const badEmo  = allTrades.filter(t => badEmotions.includes(t.emotion)).length;
+  const losses  = allTrades.filter(t => (t.pnl||0) < 0);
+  const bigLoss = losses.filter(t => Math.abs(t.pnl||0) > 10000).length;
+
+  const discipline  = Math.round(Math.max(0, 100 - (badEmo / total) * 100));
+  const consistency = Math.round((wins / total) * 100);
+  const lossMgmt    = Math.round(Math.max(0, 100 - (bigLoss / Math.max(losses.length,1)) * 80));
+  const revengeScore= Math.round(Math.max(0, 100 - (revenge / total) * 200));
+
+  const overall = Math.round((discipline * 0.35) + (consistency * 0.3) + (lossMgmt * 0.2) + (revengeScore * 0.15));
+  return { overall, discipline, consistency, lossMgmt, revengeScore };
+}
+
+function renderPsychScore() {
+  const s = calcPsychScore();
+  if (!s) return;
+
+  const scoreEl = document.getElementById('psych-score-num');
+  const labelEl = document.getElementById('psych-label');
+  scoreEl.textContent = s.overall;
+
+  let label, color;
+  if (s.overall >= 80) { label = 'Excellent'; color = 'var(--green)'; }
+  else if (s.overall >= 60) { label = 'Good'; color = 'var(--gold)'; }
+  else if (s.overall >= 40) { label = 'Needs work'; color = '#e07c3a'; }
+  else { label = 'Struggling'; color = 'var(--red)'; }
+
+  scoreEl.style.color = color;
+  labelEl.textContent = label;
+  labelEl.style.background = color + '22';
+  labelEl.style.color = color;
+
+  const bars = [
+    ['discipline',  s.discipline,   'var(--gold)'],
+    ['consistency', s.consistency,  'var(--green)'],
+    ['loss',        s.lossMgmt,     'var(--green)'],
+    ['revenge',     s.revengeScore, s.revengeScore < 70 ? 'var(--red)' : 'var(--green)'],
+  ];
+  bars.forEach(([key, val, clr]) => {
+    const fill = document.getElementById('pb-' + key);
+    const valEl= document.getElementById('pv-' + key);
+    if (fill) { fill.style.width = val + '%'; fill.style.background = clr; }
+    if (valEl) valEl.textContent = val;
+  });
+}
+
+/* ── AI TRADE ANALYSER ── */
+async function runTradeAnalysis() {
+  if (allTrades.length < 3) { showToast('Log at least 3 trades first', 'error'); return; }
+  const body = document.getElementById('ai-analysis-body');
+  body.innerHTML = '<div class="ai-generating"><span class="spinner"></span> Claude is reading your trades...</div>';
+
+  const summary = allTrades.slice(0,30).map(t =>
+    `${t.symbol} ${t.trade_type} | Entry:${t.entry_price} Exit:${t.exit_price} Qty:${t.quantity} | P&L:${Math.round(t.pnl||0)} | Emotion:${t.emotion||'None'} | Strategy:${t.strategy||'None'} | Notes:${t.notes||''}`
+  ).join('\n');
+
+  const wins  = allTrades.filter(t=>(t.pnl||0)>0).length;
+  const total = allTrades.length;
+  const netPnl= Math.round(allTrades.reduce((s,t)=>s+(t.pnl||0),0));
+  const psych = calcPsychScore();
+
+  const prompt = `You are a professional trading coach analysing an Indian retail trader's journal. Here is their recent trade data:
+
+${summary}
+
+Overall stats: ${total} trades, ${wins} wins (${Math.round(wins/total*100)}% win rate), Net P&L: ₹${netPnl}, Psychology score: ${psych ? psych.overall + '/100' : 'N/A'}.
+
+Give a sharp, honest, actionable analysis in plain English. Structure your response in these sections:
+1. **Overall assessment** (2-3 sentences on their trading)
+2. **Top strength** (what they do well)
+3. **Biggest weakness** (the #1 thing costing them money)
+4. **Pattern detected** (any recurring behaviour — emotional, time-based, symbol-based)
+5. **3 specific action items** (numbered, concrete, implementable this week)
+
+Be direct. Don't be generic. Reference specific trades or patterns from their data. Keep it under 300 words.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || 'No response received.';
+    renderAIResponse(body, text, 'analysis');
+  } catch(e) {
+    body.innerHTML = '<div style="padding:16px;color:var(--red);font-size:13px;">Error connecting to AI. Please try again.</div>';
+  }
+}
+
+/* ── AI WEEKLY REPORT ── */
+async function runWeeklyReport() {
+  if (allTrades.length < 2) { showToast('Log at least 2 trades first', 'error'); return; }
+  const body = document.getElementById('ai-weekly-body');
+  body.innerHTML = '<div class="ai-generating"><span class="spinner"></span> Claude is writing your weekly report...</div>';
+
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 7);
+  const weekTrades = allTrades.filter(t => t.traded_at && new Date(t.traded_at) >= cutoff);
+  const useTrades  = weekTrades.length >= 2 ? weekTrades : allTrades.slice(0,15);
+
+  const summary = useTrades.map(t =>
+    `${t.symbol} ${t.trade_type} | P&L:${Math.round(t.pnl||0)} | Emotion:${t.emotion||'None'} | Strategy:${t.strategy||'None'}`
+  ).join('\n');
+
+  const wins  = useTrades.filter(t=>(t.pnl||0)>0).length;
+  const netPnl= Math.round(useTrades.reduce((s,t)=>s+(t.pnl||0),0));
+
+  const prompt = `You are a trading coach writing a weekly performance report for an Indian retail trader.
+
+This week's trades (${useTrades.length} total, ${wins} wins, Net P&L: ₹${netPnl}):
+${summary}
+
+Write a concise weekly report with:
+1. **Week in review** (one line verdict — good week / bad week and why)
+2. **What worked** (specific setups or behaviours that generated profit)
+3. **What didn't work** (specific mistakes with their cost)
+4. **Emotional patterns this week** (based on emotion tags)
+5. **Focus for next week** (1-2 specific things to improve)
+
+Be encouraging but honest. Reference their actual trades. Keep it under 250 words. Write as if you're a trusted mentor.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || 'No response received.';
+    renderAIResponse(body, text, 'weekly');
+  } catch(e) {
+    body.innerHTML = '<div style="padding:16px;color:var(--red);font-size:13px;">Error connecting to AI. Please try again.</div>';
+  }
+}
+
+function renderAIResponse(container, text, type) {
+  const formatted = text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+
+  const posWords = ['strength','worked','profit','win','good','excellent','consistent','disciplined'];
+  const negWords = ['weakness','mistake','loss','cost','revenge','fomo','fear','avoid','stop'];
+
+  container.innerHTML = `<div class="ai-panel">
+    <div class="ai-panel-header">
+      <div class="ai-dot-pulse"></div>
+      <span>Claude — ${type === 'weekly' ? 'Weekly report' : 'Trade analysis'}</span>
+    </div>
+    <div class="ai-panel-body"><p>${formatted}</p></div>
+  </div>`;
 }
 
 /* ── TOAST ── */
